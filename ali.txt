@@ -1,0 +1,141 @@
+print('10-fold')
+
+self_scores = []
+self_scores.append([tn,fp,fn,tp,acc,sens,spec,mcc])
+
+kfold = StratifiedKFold(n_splits=10, shuffle=True)
+cvscores = []
+iterator = 1
+cv_score = 0
+cv_score1 = 0
+cv_score2 = 0
+cv_score3 = 0
+for train, test in kfold.split(X, Y):
+    print('Fold : '+str(iterator))
+    clf = RandomForestClassifier(n_estimators=70, max_depth=80,  oob_score=True, n_jobs=-1, warm_start=True).fit(X, Y.ravel())
+    pred = np.round(clf.predict(X[test]))
+    tn, fp, fn, tp = confusion_matrix(Y[test], pred, labels=[1,0]).ravel()
+    acc = np.round(((tn+tp)/(tn+fp+fn+tp))*100, 2)
+    sens = np.round(((tp)/(tp+fn))*100, 2)
+    spec = np.round(((tn)/(tn+fp))*100, 2)
+    mcc = np.round(((tp*tn-fp*fn)/math.sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn)))*100,2)
+    cvscores.append([tn,fp,fn,tp,acc,sens,spec,mcc])
+    iterator=iterator+1
+    print(['TN',tn,'FP',fp,'FN',fn,'TP',tp,'ACC',acc,'Sens',sens,'Spec',spec,'MCC',mcc])
+    cv_score = cv_score + acc
+    cv_score1 = cv_score1 + sens
+    cv_score2 = cv_score2 + spec
+    cv_score3 = cv_score3 + mcc
+print('\n\r Total accuracy of 10-fold = ', np.round(cv_score/kfold.n_splits,2),'\n\rResults are Saved in result.csv\n\r')
+with open('./result.csv', 'w', newline='') as csvfile:
+    
+    print('\n\r Total sensivity of 10-fold = ', np.round(cv_score1/kfold.n_splits,2),'\n\rResults are Saved in result.csv\n\r')
+with open('./result.csv', 'w', newline='') as csvfile:
+    
+    print('\n\r Total specificity of 10-fold = ', np.round(cv_score2/kfold.n_splits,2),'\n\rResults are Saved in result.csv\n\r')
+with open('./result.csv', 'w', newline='') as csvfile:
+    
+    print('\n\r Total MCC of 10-fold = ', np.round(cv_score3/kfold.n_splits,2),'\n\rResults are Saved in result.csv\n\r')
+with open('./result.csv', 'w', newline='') as csvfile:
+    
+    resultwriter = csv.writer(csvfile, delimiter=',', quotechar='|')
+    resultwriter.writerow(['10-Fold cross validation'])
+    resultwriter.writerow(['True Negative', 'False Positive', 'False Negative', 'True Positive', 'Accuracy', 'Sensivity', 'Specificity'])
+    resultwriter.writerow(self_scores)
+    resultwriter.writerow(['True Negative', 'False Positive', 'False Negative', 'True Positive', 'Accuracy', 'Sensivity', 'Specificity'])
+    for i in range(cvscores.__len__()):
+        resultwriter.writerow(cvscores[i])
+    resultwriter.writerow(['The Total Accuracy of 10-fod','','','',np.round(cv_score/kfold.n_splits,2)])
+    resultwriter.writerow(['The Total Specificity of 10-fold','','','',np.round(cv_score1/kfold.n_splits,2)])
+    resultwriter.writerow(['The Total Sensivity of 10-fold','','','',np.round(cv_score2/kfold.n_splits,2)])
+    resultwriter.writerow(['The Total MCC of 10-fold','','','',np.round(cv_score3/kfold.n_splits,2)])
+    
+
+
+
+
+
+kfold=KFold(n_splits=15 ,shuffle=False)#emoved Stratified Keyword for JackKnife
+cvscores1=[]
+iterator1=1
+cv_score1=0
+cv_score2=0
+
+#Normalization
+std_scale = StandardScaler().fit(X)
+X = np.array(X,dtype='float64')
+X = std_scale.transform(X)
+#pca = decomposition.PCA(n_components=2)
+#pca.fit(X)
+#X = pca.transform(X)
+print('\nJacknife testing')
+for train, test in kfold.split(X, Y):
+  print('\nJacknife : ' + str(iterator1)
+clf = RandomForestClassifier(n_estimators=100,
+                             criterion='gini',
+                             max_depth=None,
+                             min_samples_split=2,
+                             min_samples_leaf=1, 
+                             min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, min_impurity_decrease=0.0,
+                             min_impurity_split=None, bootstrap=True, oob_score=False, n_jobs=None, random_state=None, verbose=0,
+                             warm_start=False, class_weight=None, ccp_alpha=0.0, max_samples=None).fit(X, Y.ravel())
+pred=np.round(clf.predict(X[test]))
+tn, fp, fn, tp=confusion_matrix(Y[test], pred, labels=[1, 0]).ravel()
+acc=np.round(((tn+tp)/(tn+fp+fn+tp))*100, 2)
+sens = np.round(((tp)/(tp+fn))*100, 2)
+cvscores1.append([tn,fp,fn,tp,acc,sens])
+iterator1=iterator+1
+print([tn, fp, fn, tp, acc, sens])
+cv_score1=cv_score+ acc
+cv_score2cv_score+ sens
+print('\n\rFinal Jacknife Score = ', np.round(cv_score1/ kfold.n_splits, 2))
+with open('./result3.csv', 'w', newline='') as csvfile:
+    print('\n\rFinal sens sc', np.round(cv_score2 kfold.n_splits, 2))
+with open('./result3.csv', 'w', newline='') as csvfile:
+    resultwriter=csv.writer(csvfile, delimiter=',', quotechar='|')
+    resultwriter.writerow(['\nJacknife'])
+    resultwriter.writerow(['True Negative' 'False Positive' 'False Negative' 'True Positive' 'Accuracy'])
+    for i in range(cvscores.__len__()):
+      resultwriter.writerow(cvscores[i])
+    resultwriter.writerow(['The Final Jacknife Score', '', '', '', np.round(cv_score1/ kfold.n_splits, 2)])
+
+
+
+
+
+
+
+
+
+# generate 2 class dataset
+X, y = make_classification(n_samples=17388, n_classes=2, random_state=1)
+# split into train/test sets
+trainX, testX, trainy, testy = train_test_split(X, y, test_size=0.3, random_state=2)
+# generate a no skill prediction (majority class)
+ns_probs = [0 for _ in range(len(testy))]
+# fit a model
+clf = RandomForestClassifier(n_estimators=100, max_depth=None, oob_score=True, n_jobs=-1, warm_start=True)
+clf.fit(trainX, trainy) 
+# predict probabilities
+lr_probs = clf.predict_proba(testX)
+# keep probabilities for the positive outcome only
+lr_probs = lr_probs[:, 1]
+# calculate scores
+ns_auc = roc_auc_score(testy, ns_probs)
+lr_auc = roc_auc_score(testy, lr_probs)
+# summarize scores
+print('Support vector machines: ROC AUC=%.3f' % (ns_auc))
+print('Randomforest classifier: ROC AUC=%.3f' % (lr_auc))
+# calculate roc curves
+ns_fpr, ns_tpr, _ = roc_curve(testy, ns_probs)
+lr_fpr, lr_tpr, _ = roc_curve(testy, lr_probs)
+# plot the roc curve for the model
+pyplot.plot(ns_fpr, ns_tpr, linestyle='--')
+pyplot.plot(lr_fpr, lr_tpr, marker='.', label='RFC')
+# axis labels
+pyplot.xlabel('False Positive Rate')
+pyplot.ylabel('True Positive Rate')
+# show the legend
+pyplot.legend()
+# show the plot
+pyplot.show()
